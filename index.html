@@ -1208,17 +1208,33 @@ function renderBudget() {
   html += '<div class="budget-section">';
   html += '<div class="section-head"><span class="section-head-label">Fixed outgoings</span><span class="section-head-line"></span><span class="section-head-total">' + fmt0(fixedTotal) + '/mo</span></div>';
 
+    var paidMap    = getPaidFixed();
+  var paidCount  = 0;
+  var paidAmount = 0;
+
   fixedPayments.forEach(function(row) {
-    html += '<div class="budget-row" style="grid-template-columns:1fr 90px 130px">';
+    var isPaid = !!paidMap[row.id];
+    if (isPaid) { paidCount++; paidAmount += row.target; }
+    var paidClass = isPaid ? ' fixed-paid' : '';
+    var btnClass  = isPaid ? 'paid' : 'pending';
+    var btnLabel  = isPaid ? '✓ Paid' : 'Mark paid';
+    html += '<div class="budget-row' + paidClass + '" style="grid-template-columns:1fr 90px 175px">';
     html += '<div><div class="budget-row-label">'+row.label+'</div>'+(row.sub?'<div class="budget-row-sub">'+row.sub+'</div>':'')+'</div>';
     html += '<div class="budget-row-target">'+fmt(row.target)+'</div>';
     html += '<div class="fixed-row-actions">';
-    html += '<button class="fixed-edit-btn" onclick="openEditFixedModal(\''+row.id+'\')">✎ Edit</button>';
-    html += '<button class="fixed-del-btn" onclick="removeFixedPayment(\''+row.id+'\')">✕ Remove</button>';
+    html += '<button class="btn-mark-paid ' + btnClass + '" onclick="toggleFixedPaid(\'' + row.id + '\')">' + btnLabel + '</button>';
+    html += '<button class="fixed-edit-btn" onclick="openEditFixedModal(\'' + row.id + '\')">✎</button>';
+    html += '<button class="fixed-del-btn" onclick="removeFixedPayment(\'' + row.id + '\')">✕</button>';
     html += '</div></div>';
   });
 
-  html += '<div class="fixed-mgmt-bar"><button class="add-fixed-btn" onclick="openAddFixedModal()">+ Add fixed payment</button></div>';
+  var remaining = fixedTotal - paidAmount;
+  var pct = fixedTotal > 0 ? Math.round((paidAmount / fixedTotal) * 100) : 0;
+  html += '<div class="fixed-progress">';
+  html += '<div class="fixed-progress-row"><span>' + paidCount + ' of ' + fixedPayments.length + ' paid &mdash; ' + fmt0(paidAmount) + ' cleared</span><strong>' + fmt0(remaining) + ' still to come</strong></div>';
+  html += '<div class="fixed-progress-track"><div class="fixed-progress-fill" style="width:' + pct + '%"></div></div>';
+  html += '</div>';
+    html += '<div class="fixed-mgmt-bar"><button class="add-fixed-btn" onclick="openAddFixedModal()">+ Add fixed payment</button></div>';
   html += '</div>';
   var varTotal = totalVarBudget();
   html += '<div class="budget-section"><div class="section-head"><span class="section-head-label">Variable spending</span><span class="section-head-line"></span><span class="section-head-total">budget '+fmt0(varTotal)+'/mo</span></div>';
